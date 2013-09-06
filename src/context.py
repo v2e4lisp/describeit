@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 class Context(object):
     instance = None
     def __new__(cls):

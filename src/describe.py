@@ -11,14 +11,12 @@ class Describe(object):
     def __enter__(self):
         if self.skip:
             return None
-
         Context().stepin(self)
         return self
 
     def __exit__(self, etype=None, evalue=None, trace=None):
         if self.skip:
             return True
-
         Context().stepout()
         return False if etype and etype is not ExitContextSignal else True
 
@@ -54,7 +52,6 @@ class It(object):
     def __enter__(self):
         if self.skip:
             return None
-
         Context().stepin(self)
         return self.obj
 
