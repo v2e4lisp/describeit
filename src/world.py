@@ -1,4 +1,4 @@
-from context import Context
+from context import Context, ExitContextSignal
 from copy import copy
 from reporter import Default
 
@@ -31,7 +31,14 @@ class World(object):
     def __str__(self):
         return self.message
 
-    def add(self, trace=None):
+    def add(self, it, ex):
+        etype = ex[0]
         chain = map(lambda x: str(x), (Context().chain))
-        self.errors.append([chain, trace])
+
+        if etype and etype is not ExitContextSignal:
+            self.reporter.fail(it, ex)
+            self.errors.append([chain, ex])
+        else:
+            self.reporter.ok(it)
+            self.errors.append([chain, None])
     append = add

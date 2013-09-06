@@ -28,10 +28,10 @@ class Context(object):
         self.chain = []
         return self
 
-class ContextException(Exception): pass
+class ExitContextSignal(Exception): pass
 
 def skip():
-    raise ContextException("get out of the context")
+    raise ExitContextSignal("get out of the context")
 
 def this():
     return Context().current

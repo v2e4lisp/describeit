@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from termcolor import cprint, colored
 from sys import stdout
+from traceback import extract_tb as ext
 
 class Default:
     OK = colored(' ¶', 'green');
@@ -13,15 +14,10 @@ class Default:
 
     def after(self, errors):
         self.__summary(errors)
-        index = 0
-        for err in errors:
-            if err[-1]:
-                index += 1
-                cprint("  {}). ".format(index) + " ".join(err[0]), "red")
-                message = err[-1].pop()
-                cprint("    " + message)
-                cprint(" => " + err[-1][0], "cyan", end='')
-                cprint("    ".join(err[-1][1:]), "grey")
+        errors = filter(lambda x: x[1], errors)
+        for e in errors:
+            print e[0]
+            print ext(e[1][-1])
 
     def ok(self, the):
         stdout.write(Default.OK)

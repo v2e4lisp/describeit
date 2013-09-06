@@ -1,7 +1,6 @@
 import re
-from context import Context, ContextException
+from context import Context
 from world import World
-import traceback
 
 class Describe(object):
     def __init__(self, message):
@@ -21,7 +20,7 @@ class Describe(object):
             return True
 
         Context().stepout()
-        return False if etype and etype is not ContextException else True
+        return False if etype and etype is not ExitContextSignal else True
 
     def __str__(self):
         return self.message
@@ -62,14 +61,7 @@ class It(object):
     def __exit__(self, etype=None, evalue=None, trace=None):
         if self.skip:
             return True
-
-        if etype and etype is not ContextException:
-            info = traceback.format_stack() + [evalue.message]
-            World().reporter.fail(self, info)
-            World().append(info)
-        else:
-            World().reporter.ok(self)
-            World().append(None)
+        World().append(self, (etype, evalue, trace))
         Context().stepout()
         return True
 
