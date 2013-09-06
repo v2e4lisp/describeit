@@ -12,7 +12,7 @@ def chains(obj):
     def t(obj, parent):
         chain = parent + [obj]
         if isinstance(obj, core.It):
-            return [parent + [obj]]
+            return [chain]
         return reduce(lambda acc, c: acc + t(c, chain), obj.children, [])
     return t(obj, [])
 
