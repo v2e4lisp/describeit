@@ -6,8 +6,8 @@ describe = Description = Describe
 it = It
 
 
-def skip():
-    raise ExitContextSignal("get out of the context")
+# def skip():
+#     raise ExitContextSignal("get out of the context")
 
-def this():
-    return Context().current
+# def this():
+#     return Context().current

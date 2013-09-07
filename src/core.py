@@ -113,7 +113,7 @@ class Describe(object):
         self.parent.children.append(self)
         World().after_describe(self)
         Context().stepout()
-        return etype and etype is not ExitContextSignal
+        return True
 
     def __str__(self):
         return self.message
