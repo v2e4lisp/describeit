@@ -41,13 +41,12 @@ class ExitContextSignal(Exception): pass
 class World(object):
     instance = None
 
-    def __new__(cls, error=None):
+    def __new__(cls):
         if not cls.instance:
             i = cls.instance = super(World, cls).__new__(cls)
             i.message = "[Describe]"
             i.reporter = None
             i.children = []
-            i.errors = []
         return cls.instance
 
     def __getattr__(self, attr):
