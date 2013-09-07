@@ -1,6 +1,5 @@
 from the import The
 from src import *
-from termcolor import cprint
 import time
 
 def iraise(x):
@@ -14,6 +13,12 @@ def fib(x):
         return memo[x]
     return _fib()
 
+def p(x):
+    x.set("user", "wenjun.yan")
+
+def z(x):
+    print x.get("user")
+
 World().begin()
 
 with describe("Test fibonacci function with some random args "):
@@ -25,7 +30,8 @@ with describe("Test fibonacci function with some random args "):
         # it.when.apply(1).should.Return(321)
         # it.when.apply(1).should.Return(121)
 
-with describe("default assert statment"):
+with describe("default assert statment") as x:
+    # x.before(p).after(z)
     with it.skip("should work"):
         assert True, 'action!'
 

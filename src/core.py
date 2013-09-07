@@ -17,8 +17,6 @@ class Context(object):
             return self.chain[-1]
         elif attr == "parent":
             return self.chain[-2]
-        elif attr in ["set", "get", "after_each", "before_each", "only", "skip"]:
-            return getattr(self.chain[-1], attr)
         else:
             raise AttributeError('No attribute ' + attr + ' found in Context.')
 
@@ -96,13 +94,30 @@ class Describe(object):
     def __init__(self, message):
         self.message = message
         self.local = {}
+        self.hooks = {}
         self.parent = Context().current
         self.children = []
         self.skip = False
 
+    def __getattr__(self, attr):
+        if attr in ["call_before", "call_after"]:
+            attr = attr[5:]
+            this = self
+            hook = None
+            while True:
+                hook = this.hooks.get(attr)
+                if this.parent == World() or hook:
+                    break
+                else:
+                    this = this.parent
+            if hook:
+                hook(self)
+        else:
+            raise AttributeError('No attribute ' + attr + ' found in describe.')
+
     def __enter__(self):
         if self.skip:
-            return None
+            return self
         Context().stepin(self)
         World().before_describe(self)
         return self
@@ -118,8 +133,20 @@ class Describe(object):
     def __str__(self):
         return self.message
 
-    def get(self, key, value=None):
-        return self.local.get(key, value)
+    def before(self, fn):
+        self.hooks["before"] = fn
+        return self
+
+    def after(self, fn):
+        self.hooks["after"] = fn
+        return self
+
+    def get(self, key):
+        if key in self.local:
+            return self.local[key]
+        elif self.parent != World():
+            return self.parent.get(key)
+        return None
 
     def set(self, key, value=None):
         self.local[key] = value
@@ -149,6 +176,7 @@ class It(object):
         if self.skip:
             return None
         Context().stepin(self)
+        self.parent.call_before
         World().before_it(self)
         return self.obj
 
@@ -159,6 +187,7 @@ class It(object):
             self.exception = (etype, evalue, trace)
         self.parent.children.append(self)
         World().after_it(self)
+        self.parent.call_after
         Context().stepout()
         return True
 
