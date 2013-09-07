@@ -16,23 +16,24 @@ def fib(x):
 
 World().begin()
 
-with Description("Test fibonacci function with some random args "):
-    with It("should return the right answer", The(fib)) as it:
-        it.when.apply(1).should.Return(1)
+with describe("Test fibonacci function with some random args "):
+    with it("should return the right answer", The(fib)) as x:
+        x.when.apply(1).should.Return(1)
+        x.when.apply(3).should.Return(2)
         assert True
         # it.when.apply(1,2,3, a=1, b=2).should.Return(22222222)
         # it.when.apply(1).should.Return(321)
         # it.when.apply(1).should.Return(121)
 
-with Description("default assert statment"):
-    with It.skip("should work"):
-        assert False, 'action!'
+with describe("default assert statment"):
+    with it.skip("should work"):
+        assert True, 'action!'
 
-    with Description("How about true?"):
-        with It("should fail"):
+    with describe("How about true?"):
+        with it("should fail"):
             assert False
-        with Description("Yes, I assert true"):
-            with It("it should be True"):
-                assert False, 'action....'
+        with describe("Yes, I assert true"):
+            with it("it should be True"):
+                assert True, 'action....'
 
 World().done()

@@ -71,7 +71,8 @@ class Default(ReporterBase):
                 cprint("    " + ex[0], "grey", end='')
                 # this is the very first file that raise the exception.
                 cprint(" => " + ex[1], "cyan", end='')
-                cprint("    ".join(['']+ex[2:]), "grey")
+                cprint("    ".join(['']+ex[2:-2]), "grey", end='')
+                print ("    " + ex[-1])
 
     def before_it(self, it):
         pass
