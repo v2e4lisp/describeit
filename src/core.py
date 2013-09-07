@@ -67,7 +67,7 @@ class World(object):
         self.reporter.after(self)
         self.children = []
         Context().reset_chain()
-        return False if etype and etype is not ExitContextSignal else True
+        return etype and etype is not ExitContextSignal
     done = leave = __exit__
 
     def __str__(self):
@@ -114,7 +114,7 @@ class Describe(object):
         self.parent.children.append(self)
         World().after_describe(self)
         Context().stepout()
-        return False if etype and etype is not ExitContextSignal else True
+        return etype and etype is not ExitContextSignal
 
     def __str__(self):
         return self.message
