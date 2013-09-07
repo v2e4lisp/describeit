@@ -45,7 +45,7 @@ class ReporterBase(object):
         pass
 
 class Default(ReporterBase):
-    OK = colored(' -', 'green');
+    PASS = colored(' -', 'green');
     FAIL= colored(' *', 'red');
 
     def before(self, world):
@@ -59,7 +59,7 @@ class Default(ReporterBase):
         index = 0
         for chain in cs:
             # the last one is a testcase (It object)
-            it = chain.pop()
+            it = chain[-1]
             if it.exception:
                 index += 1
                 # get the exception infomation
@@ -78,10 +78,10 @@ class Default(ReporterBase):
 
     def after_it(self, it):
         if it.exception:
-            stdout.write(Default.OK)
+            stdout.write(Default.FAIL)
             stdout.flush()
         else:
-            stdout.write(Default.FAIL)
+            stdout.write(Default.PASS)
             stdout.flush()
 
     def before_describe(self, describe):
@@ -93,8 +93,8 @@ class Default(ReporterBase):
     def __summary(self, its):
         ''' summary of the whole testsuite'''
         total = len(its)
-        passed = len(filter(lambda x: x.exception, its))
-        failed = total - passed
+        failed = len(filter(lambda x: x.exception, its))
+        passed = total - failed
         print("\n")
         print("    Passed: {}/{}.  Failed: {}/{}".format(passed, total, failed, total))
         print("\n" * 2)

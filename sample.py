@@ -28,8 +28,11 @@ with Description("default assert statment"):
     with It.skip("should work"):
         assert False, 'action!'
 
-    with Description(" just kidding"):
-        with It("should be True"):
-            assert False, 'action....'
+    with Description("How about true?"):
+        with It("should fail"):
+            assert False
+        with Description("Yes, I assert true"):
+            with It("it should be True"):
+                assert False, 'action....'
 
 World().done()
