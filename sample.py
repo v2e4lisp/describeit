@@ -31,7 +31,7 @@ with describe("Test fibonacci function with some random args "):
         # it.when.apply(1).should.Return(121)
 
 with describe("default assert statment") as x:
-    # x.before(p).after(z)
+    x.before(p).after(z)
     with it.skip("should work"):
         assert True, 'action!'
 
