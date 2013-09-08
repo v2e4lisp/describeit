@@ -13,16 +13,17 @@ def fib(x):
         return memo[x]
     return _fib()
 
-def p(x):
-    x.set("user", "wenjun.yan")
+def p():
+    this().set("user", "wenjun.yan")
 
-def z(x):
-    print x.get("user")
+def z():
+    print this().get("user")
 
-World().begin()
+core.World().begin()
 
 with describe("Test fibonacci function with some random args "):
-    with it("should return the right answer", The(fib)) as x:
+    with it("should return the right answer", The(fib)):
+        skip()
         x.when.apply(1).should.Return(1)
         x.when.apply(3).should.Return(2)
         assert True
@@ -30,16 +31,17 @@ with describe("Test fibonacci function with some random args "):
         # it.when.apply(1).should.Return(321)
         # it.when.apply(1).should.Return(121)
 
-with describe("default assert statment") as x:
-    x.before(p).after(z)
-    with it.skip("should work"):
+with describe("default assert statment"):
+    # before(p)
+    # after(z)
+    with it("should work"):
         assert True, 'action!'
 
-    with describe("How about true?"):
+    with describe("How about false?"):
         with it("should fail"):
             assert False
         with describe("Yes, I assert true"):
             with it("it should be True"):
                 assert True, 'action....'
 
-World().done()
+core.World().done()

@@ -55,6 +55,7 @@ class Default(ReporterBase):
 
     def after(self, world):
         cs = chains(world)
+        cs = filter(lambda x: not x[-1].skip, cs)
         self.__summary(map(lambda x: x[-1], cs))
         index = 0
         for chain in cs:
@@ -78,6 +79,8 @@ class Default(ReporterBase):
         pass
 
     def after_it(self, it):
+        if it.skip:
+            return
         if it.exception:
             stdout.write(Default.FAIL)
             stdout.flush()

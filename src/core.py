@@ -64,15 +64,11 @@ class World(object):
         self.reporter.after(self)
         self.children = []
         Context().reset_chain()
-        return etype and etype is not ExitContextSignal
+        return not etype
     done = leave = __exit__
 
     def __str__(self):
         return self.message
-
-    def set_reporter(self, reporter):
-        self.reporter = reporter
-        return self
 
 # ========
 # Describe
@@ -84,13 +80,6 @@ class Describe(object):
     alias: Description
     '''
 
-    @staticmethod
-    def skip(*args, **kwargs):
-        ''' Skip the current test suite. '''
-        desc = Description(*args, **kwargs)
-        desc.skip = True
-        return desc
-
     def __init__(self, message):
         self.message = message
         self.local = {}
@@ -99,39 +88,35 @@ class Describe(object):
         self.children = []
         self.skip = False
 
-    def __getattr__(self, attr):
-        if attr in ["call_before", "call_after"]:
-            attr = attr[5:]
-            this = self
-            hook = None
-            while True:
-                hook = this.hooks.get(attr)
-                if this.parent == World() or hook:
-                    break
-                else:
-                    this = this.parent
-            if hook:
-                hook(self)
-        else:
-            raise AttributeError('No attribute ' + attr + ' found in describe.')
-
     def __enter__(self):
-        if self.skip:
-            return self
         Context().stepin(self)
         World().before_describe(self)
         return self
 
     def __exit__(self, etype=None, evalue=None, trace=None):
-        if self.skip:
-            return True
-        self.parent.children.append(self)
+        if etype is ExitContextSignal:
+            self.skip = True
         World().after_describe(self)
+        self.parent.children.append(self)
         Context().stepout()
-        return True
+        return not etype or etype is ExitContextSignal
 
     def __str__(self):
         return self.message
+
+    def call(self, callback):
+        if callback not in ["before", "after"]:
+            return
+        this = self
+        hook = None
+        while True:
+            hook = this.hooks.get(callback)
+            if this.parent == World() or hook:
+                break
+            else:
+                this = this.parent
+        if hook:
+            hook()
 
     def before(self, fn):
         self.hooks["before"] = fn
@@ -158,13 +143,6 @@ class Describe(object):
 class It(object):
     ''' Test case class '''
 
-    @staticmethod
-    def skip(*args, **kwargs):
-        ''' Skip the current test case. '''
-        it = It(*args, **kwargs)
-        it.skip = True
-        return it
-
     def __init__(self, message, obj=None):
         self.message = message
         self.obj = obj
@@ -173,23 +151,27 @@ class It(object):
         self.skip = False
 
     def __enter__(self):
-        if self.skip:
-            return None
         Context().stepin(self)
-        self.parent.call_before
+        self.parent.call("before")
         World().before_it(self)
         return self.obj
 
     def __exit__(self, etype=None, evalue=None, trace=None):
-        if self.skip:
-            return True
-        if etype:
+        if etype is ExitContextSignal:
+            self.skip = True
+        elif etype:
             self.exception = (etype, evalue, trace)
         self.parent.children.append(self)
         World().after_it(self)
-        self.parent.call_after
+        self.parent.call("after")
         Context().stepout()
         return True
 
     def __str__(self):
         return self.message
+
+    def set(self, key, value=None):
+        self.parent.set(key, value)
+
+    def get(self, var):
+        return self.parent.get(var)
