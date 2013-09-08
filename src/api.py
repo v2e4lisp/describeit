@@ -41,7 +41,7 @@ def before(fn):
     '''
     this().before(fn)
 
-# before function
+# after function
 def after(fn):
     '''
     Set after callback function.
