@@ -40,6 +40,7 @@ def before(fn):
     return: None
     '''
     this().before(fn)
+setup = before
 
 # after function
 def after(fn):
@@ -55,6 +56,7 @@ def after(fn):
     return: None
     '''
     this().after(fn)
+teardown = after
 
 # this function
 def this():
