@@ -14,10 +14,10 @@ def fib(x):
     return _fib()
 
 def p():
-    this().set("user", "wenjun.yan")
+    this("user", "wenjun.yan")
 
 def z():
-    print this().get("user")
+    print this("user")
 
 core.World().begin()
 

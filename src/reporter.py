@@ -1,6 +1,6 @@
 from termcolor import cprint, colored
 from sys import stdout
-from traceback import *
+from traceback import format_exception
 import core
 
 def its(obj):

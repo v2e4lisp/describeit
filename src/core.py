@@ -15,8 +15,6 @@ class Context(object):
     def __getattr__(self, attr):
         if attr == "current":
             return self.chain[-1]
-        elif attr == "parent":
-            return self.chain[-2]
         else:
             raise AttributeError('No attribute ' + attr + ' found in Context.')
 
@@ -26,11 +24,30 @@ class Context(object):
     def stepout(self):
         self.chain.pop()
 
-    def reset_chain(self):
+    def reset(self):
         self.chain = []
         return self
 
 class ExitContextSignal(Exception): pass
+
+# =====
+# Scope
+# =====
+
+class Scope(object):
+    def __init__(self):
+        self.local = {}
+        self.parent = Context().current
+
+    def get(self, key):
+        if key in self.local:
+            return self.local[key]
+        elif self.parent != World():
+            return self.parent.get(key)
+            return None
+
+    def set(self, key, value=None):
+        self.local[key] = value
 
 # =====
 # world
@@ -55,7 +72,7 @@ class World(object):
             raise AttributeError('No attribute ' + attr + ' found in World.')
 
     def __enter__(self):
-        Context().reset_chain().stepin(self)
+        Context().reset().stepin(self)
         self.reporter.before(self)
         return self
     begin = enter = __enter__
@@ -63,7 +80,7 @@ class World(object):
     def __exit__(self, etype=None, evalue=None, trace=None):
         self.reporter.after(self)
         self.children = []
-        Context().reset_chain()
+        Context().reset()
         return not etype
     done = leave = __exit__
 
@@ -74,7 +91,7 @@ class World(object):
 # Describe
 # ========
 
-class Describe(object):
+class Describe(Scope):
     '''
     Test suite class.
     alias: Description
@@ -82,18 +99,21 @@ class Describe(object):
 
     def __init__(self, message):
         self.message = message
-        self.local = {}
         self.hooks = {}
-        self.parent = Context().current
         self.children = []
         self.skip = False
+        super(Describe, self).__init__()
 
     def __enter__(self):
         Context().stepin(self)
+        if not self.parent == World():
+            self.parent.call("before")
         World().before_describe(self)
         return self
 
     def __exit__(self, etype=None, evalue=None, trace=None):
+        if not self.parent == World():
+            self.parent.call("after")
         if etype is ExitContextSignal:
             self.skip = True
         World().after_describe(self)
@@ -105,58 +125,40 @@ class Describe(object):
         return self.message
 
     def call(self, callback):
-        if callback not in ["before", "after"]:
-            return
-        this = self
-        hook = None
-        while True:
-            hook = this.hooks.get(callback)
-            if this.parent == World() or hook:
-                break
-            else:
-                this = this.parent
-        if hook:
-            hook()
+        if callback in ["before", "after"] and self.hooks.get(callback, None):
+            self.hooks.get(callback)()
 
     def before(self, fn):
         self.hooks["before"] = fn
-        return self
 
     def after(self, fn):
         self.hooks["after"] = fn
-        return self
-
-    def get(self, key):
-        if key in self.local:
-            return self.local[key]
-        elif self.parent != World():
-            return self.parent.get(key)
-        return None
-
-    def set(self, key, value=None):
-        self.local[key] = value
 
 # ==
 # It
 # ==
 
-class It(object):
+class It(Scope):
     ''' Test case class '''
 
     def __init__(self, message, obj=None):
         self.message = message
         self.obj = obj
-        self.parent = Context().current
         self.exception = None
         self.skip = False
+        super(It, self).__init__()
 
     def __enter__(self):
         Context().stepin(self)
+        if not self.parent == World():
+            self.parent.call("before")
         self.parent.call("before")
         World().before_it(self)
         return self.obj
 
     def __exit__(self, etype=None, evalue=None, trace=None):
+        if not self.parent == World():
+            self.parent.call("after")
         if etype is ExitContextSignal:
             self.skip = True
         elif etype:
@@ -169,9 +171,3 @@ class It(object):
 
     def __str__(self):
         return self.message
-
-    def set(self, key, value=None):
-        self.parent.set(key, value)
-
-    def get(self, var):
-        return self.parent.get(var)

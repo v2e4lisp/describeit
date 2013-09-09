@@ -29,8 +29,7 @@ def set_reporter(cls=reporter.Default()):
 # before function
 def before(fn):
     '''
-    Set before callback function.
-    This function will be called when each testcase starts.
+    Set before callback function for its direct children. NOT recursively.
 
     alias: setup
 
@@ -45,8 +44,7 @@ setup = before
 # after function
 def after(fn):
     '''
-    Set after callback function.
-    This function will be called when each testcase ends.
+    Set after callback function for its direct children. NOT recursively.
 
     alias: teardown
 
@@ -59,18 +57,36 @@ def after(fn):
 teardown = after
 
 # this function
-def this():
+def this(key=None, value=None):
     '''
-    Return the current current testcase(aka It object) or
-    testsuite(aka describe object)
+    1. when key, and value are None,
+    return the current testcase(aka `It`) or testsuite(aka `describe`)
 
-    arguments: None
+    2. when key is set and value is None,
+    return the local variable's value.
+    It's a shortcut for `this().get(key)`
 
-    return: current `Describe` or `It`
+    3. when key and value are set,
+    set the local variable key = value.
+    It's a shortcut for `this().set(key, value)`
+
+    arguments:
+    key -- local var name
+    value -- local var value
+
+    return:
+    1. current `It` or `describe`
+    2. current variable
+    3. None
     '''
-    t = core.Context().current
-    if not t == core.World():
-        return t
+    if key is None:
+        t = core.Context().current
+        if not t == core.World():
+            return t
+    elif value is None:
+        return this().get(key)
+    else:
+        this().set(key, value)
 
 # skip function
 def skip():
