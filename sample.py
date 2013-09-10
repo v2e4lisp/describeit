@@ -22,24 +22,25 @@ def z():
 core.World().begin()
 
 with describe("Test fibonacci function with some random args "):
-    with it("should return the right answer", The(fib)):
-        skip()
+    with it("should return the right answer", The(fib)) as x:
         x.when.apply(1).should.Return(1)
         x.when.apply(3).should.Return(2)
+        skip()
         assert True
         # it.when.apply(1,2,3, a=1, b=2).should.Return(22222222)
         # it.when.apply(1).should.Return(321)
         # it.when.apply(1).should.Return(121)
 
 with describe("default assert statment"):
-    # before(p)
+    before(p)
     # after(z)
     with it("should work"):
-        assert True, 'action!'
+        assert False , "I'm False"
 
-    with describe("How about false?"):
+    with describe("assert false"):
         with it("should fail"):
-            assert False
+            The(this).apply("user").should.Return("wenjun.yan")
+
         with describe("Yes, I assert true"):
             with it("it should be True"):
                 assert True, 'action....'

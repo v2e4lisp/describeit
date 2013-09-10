@@ -14,7 +14,36 @@ def chains(obj):
         if isinstance(obj, core.It):
             return [chain]
         return reduce(lambda acc, c: acc + t(c, chain), obj.children, [])
-    return t(obj, [])
+    return map(lambda x: Chain(x), t(obj, []))
+
+def active_chains(obj):
+    cs = obj if isinstance(obj, list) else chains(obj)
+    return filter(lambda x: not x.skip, cs)
+
+def inactive_chains(obj):
+    cs = obj if isinstance(obj, list) else chains(obj)
+    return filter(lambda x: x.skip, cs)
+
+def to_chain(obj):
+    if isinstance(obj, list):
+        return Chain(obj)
+    ret = [obj]
+    while True:
+        obj = hasattr(obj, 'parent') and getattr(obj, 'parent')
+        if not obj:
+            break
+        ret = [parent] + ret
+    return Chain(ret)
+
+class Chain(object):
+    def __init__(self, chain):
+        self.chain = chain
+        self.it = chain[-1]
+        self.exception = self.it.exception
+        self.ex = format_exception(*self.exception) if self.exception else None
+        self.description = " ".join(map(lambda x: str(x), self.chain))
+        self.skip = self.inactive = self.it.skip
+        self.active = not self.skip
 
 class ReporterBase(object):
     '''
@@ -40,6 +69,7 @@ class ReporterBase(object):
     def before_describe(self, describe):
         ''' called when current testsuite begin '''
         pass
+
     def after_describe(self, describe):
         ''' called when current testsuite is done '''
         pass
@@ -54,29 +84,27 @@ class Default(ReporterBase):
         stdout.flush()
 
     def after(self, world):
-        cs = chains(world)
-        cs = filter(lambda x: not x[-1].skip, cs)
-        self.__summary(map(lambda x: x[-1], cs))
+        cs = active_chains(world)
+        self.__summary(cs)
         index = 0
         for chain in cs:
-            # the last one is a testcase (It object)
-            it = chain[-1]
-            if it.exception:
+            if chain.exception:
                 index += 1
-                # get the exception infomation
-                ex = format_exception(*it.exception)
-                # the description for this testcase
-                de = " ".join(map(lambda x: str(x), chain))
 
-                cprint("  {}). {}".format(index, de), "red")
-                cprint("    " + ex[0], "grey", end='')
+                # description
+                cprint("  {}). {}".format(index, chain.description), "red")
+
+                # "Traceback (most recent call last):"
+                cprint("    " + chain.ex[0], "grey", end='')
+
                 # this is the very first file that raise the exception.
-                cprint(" => " + ex[1], "cyan", end='')
-                cprint("    ".join(['']+ex[2:-2]), "grey", end='')
-                print ("    " + ex[-1])
+                cprint(" => " + chain.ex[1], "cyan", end='')
 
-    def before_it(self, it):
-        pass
+                # other traceback file info
+                cprint("    ".join([''] + chain.ex[2:-2]), "grey", end='')
+
+                # assertion error message
+                print ("    " + chain.ex[-1])
 
     def after_it(self, it):
         if it.skip:
@@ -88,16 +116,10 @@ class Default(ReporterBase):
             stdout.write(Default.PASS)
             stdout.flush()
 
-    def before_describe(self, describe):
-        pass
-
-    def after_describe(self, describe):
-        pass
-
-    def __summary(self, its):
+    def __summary(self, cs):
         ''' summary of the whole testsuite'''
-        total = len(its)
-        failed = len(filter(lambda x: x.exception, its))
+        total = len(cs)
+        failed = len(filter(lambda x: x.exception, cs))
         passed = total - failed
         print("\n")
         print("    Passed: {}/{}.  Failed: {}/{}".format(passed, total, failed, total))
