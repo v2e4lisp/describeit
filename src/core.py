@@ -96,6 +96,8 @@ class Describe(Scope):
     Test suite class.
     alias: Description
     '''
+    HOOKS = {"before_all", "before_each",
+             "after_all", "after_each"}
 
     def __init__(self, message):
         self.message = message
@@ -107,13 +109,13 @@ class Describe(Scope):
     def __enter__(self):
         Context().stepin(self)
         if not self.parent == World():
-            self.parent.call("before")
+            self.parent.call("before_all")
         World().before_describe(self)
         return self
 
     def __exit__(self, etype=None, evalue=None, trace=None):
         if not self.parent == World():
-            self.parent.call("after")
+            self.parent.call("before_after")
         if etype is ExitContextSignal:
             self.skip = True
         World().after_describe(self)
@@ -125,14 +127,8 @@ class Describe(Scope):
         return self.message
 
     def call(self, callback):
-        if callback in ["before", "after"] and self.hooks.get(callback, None):
+        if callback in Describe.HOOKS and self.hooks.get(callback, None):
             self.hooks.get(callback)()
-
-    def before(self, fn):
-        self.hooks["before"] = fn
-
-    def after(self, fn):
-        self.hooks["after"] = fn
 
 # ==
 # It
@@ -151,14 +147,14 @@ class It(Scope):
     def __enter__(self):
         Context().stepin(self)
         if not self.parent == World():
-            self.parent.call("before")
+            self.parent.call("before_each")
         self.parent.call("before")
         World().before_it(self)
         return self.obj
 
     def __exit__(self, etype=None, evalue=None, trace=None):
         if not self.parent == World():
-            self.parent.call("after")
+            self.parent.call("after_each")
         if etype is ExitContextSignal:
             self.skip = True
         elif etype:

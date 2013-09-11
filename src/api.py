@@ -27,33 +27,35 @@ def set_reporter(cls=reporter.Default()):
         core.World().reporter = cls
 
 # before function
-def before(fn):
+def before(t, fn):
     '''
     Set before callback function for its direct children. NOT recursively.
 
     alias: setup
 
     arguments:
+    t  -- "each" or "all"
     fn -- function()
 
     return: None
     '''
-    this().before(fn)
+    this().hooks["before_" + t] = fn
 setup = before
 
 # after function
-def after(fn):
+def after(t, fn):
     '''
     Set after callback function for its direct children. NOT recursively.
 
     alias: teardown
 
     arguments:
+    t  -- "each" or "all"
     fn -- function()
 
     return: None
     '''
-    this().after(fn)
+    this().hooks["after_" + t] = fn
 teardown = after
 
 # this function
